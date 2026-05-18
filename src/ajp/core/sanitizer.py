@@ -1,9 +1,9 @@
 """Prompt injection protection with multi-layer sanitization."""
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import List, Optional
 import re
 import unicodedata
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional
 
 
 class SanitizationLevel(Enum):

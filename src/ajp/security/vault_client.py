@@ -1,12 +1,11 @@
 """Production HashiCorp Vault client with multiple auth methods."""
+import hashlib
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
-import hashlib
-import json
-import time
+from typing import Optional
 
 
 class AuthMethod(Enum):
@@ -30,13 +29,13 @@ class VaultBackend(ABC):
         pass
 
     @abstractmethod
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         pass
 
 
 @dataclass
 class MockVaultAdapter(VaultBackend):
-    _store: Dict[str, dict] = field(default_factory=dict)
+    _store: dict[str, dict] = field(default_factory=dict)
 
     def store(self, path: str, data: dict) -> bool:
         self._store[path] = {
@@ -53,7 +52,7 @@ class MockVaultAdapter(VaultBackend):
     def delete(self, path: str) -> bool:
         return self._store.pop(path, None) is not None
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._store.keys())
 
 
@@ -99,7 +98,7 @@ class VaultClient:
             return False
         return self._backend.delete(path)
 
-    def list_keys(self, path: str = "") -> List[str]:
+    def list_keys(self, path: str = "") -> list[str]:
         if not self._connected or not self._backend:
             return []
         return self._backend.list_keys()

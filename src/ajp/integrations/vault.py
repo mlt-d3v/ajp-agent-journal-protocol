@@ -1,11 +1,10 @@
 """Real HashiCorp Vault integration for AJP secret management."""
 import asyncio
-import json
 import logging
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class VaultConfig:
     auto_renew: bool = True
     renew_interval: int = 300
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -157,7 +156,7 @@ class RealVaultClient:
         """Authenticate using Kubernetes service account."""
         try:
             if self._client:
-                with open(auth_config.kubernetes_token_path, "r") as f:
+                with open(auth_config.kubernetes_token_path) as f:
                     k8s_token = f.read().strip()
 
                 response = self._client.auth.kubernetes.login(
@@ -208,7 +207,7 @@ class RealVaultClient:
             logger.error(f"AWS IAM auth failed: {e}")
             return False
 
-    async def write_secret(self, path: str, data: Dict[str, Any]) -> bool:
+    async def write_secret(self, path: str, data: dict[str, Any]) -> bool:
         """Write a secret to Vault KV v2 engine."""
         full_path = f"{self.config.secret_path}/{path}"
 
@@ -241,7 +240,7 @@ class RealVaultClient:
             return False
         return False
 
-    async def read_secret(self, path: str) -> Optional[Dict[str, Any]]:
+    async def read_secret(self, path: str) -> Optional[dict[str, Any]]:
         """Read a secret from Vault KV v2 engine."""
         full_path = f"{self.config.secret_path}/{path}"
 
@@ -277,7 +276,7 @@ class RealVaultClient:
             logger.error(f"Failed to delete secret from {full_path}: {e}")
             return False
 
-    async def list_secrets(self, path: str = "") -> List[str]:
+    async def list_secrets(self, path: str = "") -> list[str]:
         """List secrets in a path."""
         full_path = f"{self.config.secret_path}/{path}"
 
@@ -336,7 +335,7 @@ class RealVaultClient:
             logger.error(f"Decryption failed: {e}")
             return None
 
-    async def generate_dynamic_db_creds(self, role_name: str) -> Optional[Dict[str, str]]:
+    async def generate_dynamic_db_creds(self, role_name: str) -> Optional[dict[str, str]]:
         """Generate dynamic database credentials."""
         try:
             if self._client:
@@ -371,7 +370,7 @@ class RealVaultClient:
             logger.error(f"Token renewal failed: {e}")
             return False
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get Vault client statistics."""
         return {
             "connected": self._is_connected,

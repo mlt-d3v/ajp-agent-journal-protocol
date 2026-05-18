@@ -1,10 +1,10 @@
 """HSM (Hardware Security Module) backend interface."""
+import hashlib
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
-import hashlib
-import os
+from typing import Optional
 
 
 class KeyType(Enum):
@@ -49,7 +49,7 @@ class HSMBackend(ABC):
 
 @dataclass
 class SoftwareHSM(HSMBackend):
-    _keys: Dict[str, dict] = field(default_factory=dict)
+    _keys: dict[str, dict] = field(default_factory=dict)
 
     def generate_key(self, key_id: str, key_type: KeyType = KeyType.ED25519) -> bool:
         self._keys[key_id] = {

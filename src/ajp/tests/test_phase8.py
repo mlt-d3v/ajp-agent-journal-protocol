@@ -1,9 +1,9 @@
-import unittest
 import os
-import yaml
-import json
-import re
 import sys
+import unittest
+
+import yaml
+
 if sys.version_info >= (3, 11):
     import tomllib as toml
 else:
@@ -195,7 +195,7 @@ class TestPyproject(unittest.TestCase):
 
     def test_pyproject_metadata(self):
         pyproject_path = os.path.join(SKILLS_DIR, "pyproject.toml")
-        with open(pyproject_path, "rb") as f:
+        with open(pyproject_path, "r") as f:
             config = toml.load(f)
 
         project = config["project"]
@@ -204,7 +204,7 @@ class TestPyproject(unittest.TestCase):
 
     def test_pyproject_optional_deps(self):
         pyproject_path = os.path.join(SKILLS_DIR, "pyproject.toml")
-        with open(pyproject_path, "rb") as f:
+        with open(pyproject_path, "r") as f:
             config = toml.load(f)
 
         optional = config["project"]["optional-dependencies"]
@@ -214,7 +214,7 @@ class TestPyproject(unittest.TestCase):
 
     def test_pyproject_tool_configs(self):
         pyproject_path = os.path.join(SKILLS_DIR, "pyproject.toml")
-        with open(pyproject_path, "rb") as f:
+        with open(pyproject_path, "r") as f:
             config = toml.load(f)
 
         tools = config["tool"]

@@ -1,14 +1,14 @@
 """Phase 3 tests - Security Hardening."""
 import sys
 import unittest
-from datetime import datetime
+
 sys.path.insert(0, "/Users/michaelthomas/.hermes/skills/ajp-agent-journal-protocol/src")
 
-from ajp.core.entry import JournalEntry, EventType
-from ajp.security.vault_client import VaultClient, AuthMethod, MockVaultAdapter
-from ajp.security.hsm import SoftwareHSM, CloudHSM, KeyType, KeyState
-from ajp.security.orchestrator import SecurityOrchestrator, AuditEvent
-from ajp.core.anchoring import MerkleAnchoringService, AnchorBackend
+from ajp.core.anchoring import AnchorBackend, MerkleAnchoringService
+from ajp.core.entry import EventType, JournalEntry
+from ajp.security.hsm import CloudHSM, KeyState, KeyType, SoftwareHSM
+from ajp.security.orchestrator import AuditEvent, SecurityOrchestrator
+from ajp.security.vault_client import AuthMethod, MockVaultAdapter, VaultClient
 
 
 class TestVaultClient(unittest.TestCase):
@@ -219,7 +219,6 @@ class TestOrchestrator(unittest.TestCase):
         entry = JournalEntry(agent_id="agent1", event_type=EventType.THOUGHT, entry_data={})
         entry.compute_hash()
         self.orch.sign_entry("agent1", entry)
-        original_sig = entry.signature
         entry.entry_data["msg"] = "tampered"
         entry.compute_hash()
         self.assertFalse(self.orch.verify_entry("agent1", entry))

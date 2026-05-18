@@ -1,12 +1,11 @@
 """Temporal workflow engine integration for AJP."""
 import asyncio
-import json
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class WorkflowConfig:
     max_concurrent_workflows: int = 100
     enable_mock: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -56,17 +55,17 @@ class WorkflowExecution:
     workflow_id: str
     workflow_type: WorkflowType
     status: WorkflowStatus
-    config: Dict[str, Any]
+    config: dict[str, Any]
     created_at: float
     started_at: Optional[float] = None
     completed_at: Optional[float] = None
     result: Optional[Any] = None
     error: Optional[str] = None
     retry_count: int = 0
-    checkpoints: List[Dict[str, Any]] = field(default_factory=list)
-    saga_compensations: List[Dict[str, Any]] = field(default_factory=list)
+    checkpoints: list[dict[str, Any]] = field(default_factory=list)
+    saga_compensations: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
         # Handle enum serialization
         if isinstance(self.workflow_type, WorkflowType):
@@ -93,9 +92,9 @@ class TemporalWorkflowEngine:
         self.config = config or WorkflowConfig()
         self._client = None
         self._is_connected = False
-        self._workflows: Dict[str, WorkflowExecution] = {}
-        self._activities: Dict[str, Callable] = {}
-        self._workflow_defs: Dict[str, Callable] = {}
+        self._workflows: dict[str, WorkflowExecution] = {}
+        self._activities: dict[str, Callable] = {}
+        self._workflow_defs: dict[str, Callable] = {}
         self._completed_count = 0
         self._failed_count = 0
 
@@ -132,7 +131,7 @@ class TemporalWorkflowEngine:
     async def start_workflow(
         self,
         workflow_type: WorkflowType,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         workflow_id: Optional[str] = None,
     ) -> str:
         """Start a new workflow execution."""
@@ -152,7 +151,7 @@ class TemporalWorkflowEngine:
             try:
                 workflow_fn = self._workflow_defs.get(workflow_type.value)
                 if workflow_fn:
-                    handle = await self._client.start_workflow(
+                    await self._client.start_workflow(
                         workflow_fn,
                         id=workflow_id,
                         task_queue=self.config.task_queue,
@@ -232,7 +231,7 @@ class TemporalWorkflowEngine:
         execution.completed_at = time.time()
         return True
 
-    async def add_checkpoint(self, workflow_id: str, checkpoint: Dict[str, Any]) -> bool:
+    async def add_checkpoint(self, workflow_id: str, checkpoint: dict[str, Any]) -> bool:
         """Add a checkpoint to a workflow execution."""
         execution = self._workflows.get(workflow_id)
         if execution:
@@ -242,7 +241,7 @@ class TemporalWorkflowEngine:
             return True
         return False
 
-    async def get_checkpoints(self, workflow_id: str) -> List[Dict[str, Any]]:
+    async def get_checkpoints(self, workflow_id: str) -> list[dict[str, Any]]:
         """Get checkpoints for a workflow execution."""
         execution = self._workflows.get(workflow_id)
         if execution:
@@ -252,8 +251,8 @@ class TemporalWorkflowEngine:
     async def execute_saga(
         self,
         workflow_id: str,
-        operations: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        operations: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Execute a saga pattern with compensation.
 
@@ -309,7 +308,7 @@ class TemporalWorkflowEngine:
                 "compensations": compensations,
             }
 
-    async def _execute_saga_step(self, action: str, context: Dict[str, Any]) -> Any:
+    async def _execute_saga_step(self, action: str, context: dict[str, Any]) -> Any:
         """Execute a single saga step."""
         activity_fn = self._activities.get(action)
         if activity_fn:
@@ -323,7 +322,7 @@ class TemporalWorkflowEngine:
         self,
         status: Optional[WorkflowStatus] = None,
         workflow_type: Optional[WorkflowType] = None,
-    ) -> List[WorkflowExecution]:
+    ) -> list[WorkflowExecution]:
         """List workflow executions with filtering."""
         workflows = list(self._workflows.values())
 
@@ -334,7 +333,7 @@ class TemporalWorkflowEngine:
 
         return workflows
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get workflow engine statistics."""
         status_counts = {}
         for wf in self._workflows.values():

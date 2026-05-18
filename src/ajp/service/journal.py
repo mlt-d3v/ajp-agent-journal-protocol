@@ -1,14 +1,14 @@
 """Async journal service with non-blocking writes."""
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Callable, Dict, List, Optional
-from ..core.entry import JournalEntry, EventType
+from dataclasses import dataclass
+from typing import Callable, Optional
+
 from ..core.chain import JournalChain
-from ..core.rate_limiter import RateLimiter, RateLimitConfig, BackpressureLevel
+from ..core.entry import JournalEntry
+from ..core.rate_limiter import BackpressureLevel, RateLimitConfig, RateLimiter
 from .buffer import WriteBuffer
+from .storage import MockStorage, StorageBackend
 from .writer import BatchWriter
-from .storage import StorageBackend, MockStorage
 
 
 @dataclass
@@ -35,7 +35,7 @@ class AsyncJournalService:
             flush_interval=self.config.flush_interval,
         )
         self.rate_limiter = RateLimiter(self.config.rate_limit_config)
-        self._backpressure_callbacks: List[Callable] = []
+        self._backpressure_callbacks: list[Callable] = []
         self._running = False
 
     async def start(self):
@@ -77,7 +77,7 @@ class AsyncJournalService:
             except Exception:
                 pass
 
-    async def get_entries(self, limit: int = 100) -> List[JournalEntry]:
+    async def get_entries(self, limit: int = 100) -> list[JournalEntry]:
         return await self.storage.read_entries(limit=limit)
 
     def verify_chain(self) -> bool:

@@ -2,15 +2,16 @@
 import sys
 import unittest
 from datetime import datetime
+
 sys.path.insert(0, "/Users/michaelthomas/.hermes/skills/ajp-agent-journal-protocol/src")
 
-from ajp.core.entry import JournalEntry, EventType
 from ajp.core.chain import JournalChain
+from ajp.core.entry import EventType, JournalEntry
 from ajp.core.merkle import MerkleTree
-from ajp.core.secret_manager import SecretManager, MockVaultBackend, SecretLevel
-from ajp.core.sanitizer import PromptSanitizer, SanitizationConfig, SanitizationLevel
-from ajp.core.rate_limiter import RateLimiter, RateLimitConfig, CircuitBreaker, BackpressureLevel
-from ajp.core.retention import DataRetentionManager, RetentionConfig, RetentionTier
+from ajp.core.rate_limiter import BackpressureLevel, CircuitBreaker, RateLimitConfig, RateLimiter
+from ajp.core.retention import DataRetentionManager
+from ajp.core.sanitizer import PromptSanitizer
+from ajp.core.secret_manager import SecretLevel, SecretManager
 
 
 class TestJournalEntry(unittest.TestCase):
@@ -106,7 +107,7 @@ class TestSecretManager(unittest.TestCase):
 
     def test_store_and_retrieve(self):
         sm = SecretManager()
-        token = sm.register_agent("agent1", SecretLevel.HIGH)
+        sm.register_agent("agent1", SecretLevel.HIGH)
         sm.store_secret("agent1", "secrets/api_key", {"key": "abc123"}, SecretLevel.HIGH)
         result = sm.retrieve_secret("agent1", "secrets/api_key")
         self.assertEqual(result["key"], "abc123")

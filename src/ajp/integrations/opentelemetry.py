@@ -1,12 +1,11 @@
 """OpenTelemetry OTLP exporter integration for AJP."""
-import asyncio
 import json
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class OTelConfig:
     retry_delay: float = 1.0
     enable_mock: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -61,11 +60,11 @@ class Span:
     start_time: float
     end_time: Optional[float] = None
     status: SpanStatus = SpanStatus.OK
-    attributes: Dict[str, Any] = field(default_factory=dict)
-    events: List[Dict[str, Any]] = field(default_factory=list)
-    links: List[Dict[str, Any]] = field(default_factory=list)
+    attributes: dict[str, Any] = field(default_factory=dict)
+    events: list[dict[str, Any]] = field(default_factory=list)
+    links: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
         if isinstance(self.kind, SpanKind):
             result["kind"] = self.kind.value
@@ -78,12 +77,12 @@ class Span:
 class Trace:
     """Represents a complete trace."""
     trace_id: str
-    spans: List[Span] = field(default_factory=list)
+    spans: list[Span] = field(default_factory=list)
     service_name: str = ""
     started_at: float = 0.0
     completed_at: Optional[float] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "trace_id": self.trace_id,
             "spans": [s.to_dict() for s in self.spans],
@@ -100,9 +99,9 @@ class MetricPoint:
     value: float
     timestamp: float
     metric_type: MetricType
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
         if isinstance(self.metric_type, MetricType):
             result["metric_type"] = self.metric_type.value
@@ -124,11 +123,11 @@ class OTLPExporter:
     def __init__(self, config: Optional[OTelConfig] = None):
         self.config = config or OTelConfig()
         self._is_connected = False
-        self._traces: Dict[str, Trace] = {}
-        self._metrics: List[MetricPoint] = []
-        self._counters: Dict[str, float] = {}
-        self._gauges: Dict[str, float] = {}
-        self._histograms: Dict[str, List[float]] = {}
+        self._traces: dict[str, Trace] = {}
+        self._metrics: list[MetricPoint] = []
+        self._counters: dict[str, float] = {}
+        self._gauges: dict[str, float] = {}
+        self._histograms: dict[str, list[float]] = {}
         self._current_span: Optional[Span] = None
         self._export_count = 0
         self._trace_count = 0
@@ -138,9 +137,9 @@ class OTLPExporter:
         """Connect to OpenTelemetry collector."""
         try:
             from opentelemetry import trace
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
             from opentelemetry.sdk.trace import TracerProvider
             from opentelemetry.sdk.trace.export import BatchSpanProcessor
-            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
             exporter = OTLPSpanExporter(endpoint=self.config.otlp_endpoint)
             provider = TracerProvider()
@@ -179,7 +178,7 @@ class OTLPExporter:
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
         parent_span_id: Optional[str] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        attributes: Optional[dict[str, Any]] = None,
     ) -> str:
         """Create a new span within a trace."""
         trace = self._traces.get(trace_id)
@@ -209,7 +208,7 @@ class OTLPExporter:
             self._current_span.status = status
             self._current_span = None
 
-    def add_span_event(self, span_id: str, event_name: str, attributes: Optional[Dict[str, Any]] = None) -> None:
+    def add_span_event(self, span_id: str, event_name: str, attributes: Optional[dict[str, Any]] = None) -> None:
         """Add an event to a span."""
         if self._current_span and self._current_span.span_id == span_id:
             self._current_span.events.append({
@@ -223,7 +222,7 @@ class OTLPExporter:
         name: str,
         value: float,
         metric_type: MetricType = MetricType.COUNTER,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> None:
         """Record a metric data point."""
         point = MetricPoint(
@@ -246,15 +245,15 @@ class OTLPExporter:
                 self._histograms[name] = []
             self._histograms[name].append(value)
 
-    def increment_counter(self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None) -> None:
+    def increment_counter(self, name: str, value: float = 1.0, labels: Optional[dict[str, str]] = None) -> None:
         """Increment a counter metric."""
         self.record_metric(name, value, MetricType.COUNTER, labels)
 
-    def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
+    def set_gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Set a gauge metric."""
         self.record_metric(name, value, MetricType.GAUGE, labels)
 
-    def record_histogram(self, name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
+    def record_histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record a histogram value."""
         self.record_metric(name, value, MetricType.HISTOGRAM, labels)
 
@@ -264,7 +263,7 @@ class OTLPExporter:
         message: str,
         trace_id: Optional[str] = None,
         span_id: Optional[str] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        attributes: Optional[dict[str, Any]] = None,
     ) -> None:
         """Log a message with trace context."""
         log_entry = {
@@ -281,7 +280,7 @@ class OTLPExporter:
     async def export_traces(self) -> int:
         """Export completed traces."""
         exported = 0
-        for trace_id, trace in self._traces.items():
+        for _trace_id, trace in self._traces.items():
             if trace.completed_at:
                 # In mock mode, just count as exported
                 exported += 1
@@ -296,13 +295,13 @@ class OTLPExporter:
         self._export_count += 1
         return exported
 
-    async def export_all(self) -> Dict[str, int]:
+    async def export_all(self) -> dict[str, int]:
         """Export all traces and metrics."""
         traces = await self.export_traces()
         metrics = await self.export_metrics()
         return {"traces": traces, "metrics": metrics}
 
-    async def get_trace(self, trace_id: str) -> Optional[Dict[str, Any]]:
+    async def get_trace(self, trace_id: str) -> Optional[dict[str, Any]]:
         """Get a trace by ID."""
         trace = self._traces.get(trace_id)
         if trace:
@@ -313,7 +312,7 @@ class OTLPExporter:
         self,
         limit: int = 10,
         service_name: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get recent traces."""
         traces = list(self._traces.values())
         if service_name:
@@ -324,7 +323,7 @@ class OTLPExporter:
         self,
         metric_name: Optional[str] = None,
         metric_type: Optional[MetricType] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get collected metrics."""
         metrics = self._metrics
         if metric_name:
@@ -341,7 +340,7 @@ class OTLPExporter:
         """Get a gauge value."""
         return self._gauges.get(name)
 
-    async def get_histogram_stats(self, name: str) -> Optional[Dict[str, float]]:
+    async def get_histogram_stats(self, name: str) -> Optional[dict[str, float]]:
         """Get histogram statistics."""
         values = self._histograms.get(name)
         if not values:
@@ -354,7 +353,7 @@ class OTLPExporter:
             "mean": sum(values) / len(values),
         }
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get exporter statistics."""
         return {
             "connected": self._is_connected,

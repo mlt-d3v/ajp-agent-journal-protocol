@@ -2,12 +2,10 @@
 
 import asyncio
 import logging
-import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 
@@ -38,9 +36,9 @@ class JournalEntry:
     entry_id: str
     agent_id: str
     event_type: str
-    entry_data: Dict[str, Any]
+    entry_data: dict[str, Any]
     priority: int
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: str
     entry_hash: str
     signature: str
@@ -68,7 +66,7 @@ class AgentConfig:
     max_retries: int = 3
     retry_delay: float = 1.0
     session_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     default_priority: Priority = Priority.NORMAL
     auto_retry: bool = True
     batch_size: int = 10
@@ -96,7 +94,7 @@ class AJPClient:
                 "X-Session-ID": config.session_id or str(uuid.uuid4()),
             },
         )
-        self._batch_buffer: List[Dict[str, Any]] = []
+        self._batch_buffer: list[dict[str, Any]] = []
         self._sequence = 0
         self._started = False
 
@@ -120,9 +118,9 @@ class AJPClient:
         await self._client.aclose()
         self._started = False
 
-    async def log(self, event_type: EventType, entry_data: Dict[str, Any],
+    async def log(self, event_type: EventType, entry_data: dict[str, Any],
                   priority: Optional[Priority] = None,
-                  metadata: Optional[Dict[str, Any]] = None) -> JournalEntry:
+                  metadata: Optional[dict[str, Any]] = None) -> JournalEntry:
         """
         Log a journal entry to the server.
 
@@ -153,7 +151,7 @@ class AJPClient:
             logger.error(f"Failed to log entry: {e}")
             raise
 
-    async def log_batch(self, entries: List[Dict[str, Any]]) -> List[JournalEntry]:
+    async def log_batch(self, entries: list[dict[str, Any]]) -> list[JournalEntry]:
         """Log multiple entries in a single batch request."""
         results = []
         for entry in entries:
@@ -177,7 +175,7 @@ class AJPClient:
             metadata=kwargs,
         )
 
-    async def log_action(self, action_name: str, arguments: Dict[str, Any], **kwargs) -> JournalEntry:
+    async def log_action(self, action_name: str, arguments: dict[str, Any], **kwargs) -> JournalEntry:
         """Log an action/tool call."""
         return await self.log(
             EventType.ACTION,
@@ -202,7 +200,7 @@ class AJPClient:
             metadata=kwargs,
         )
 
-    async def log_error(self, error_message: str, details: Optional[Dict[str, Any]] = None, **kwargs) -> JournalEntry:
+    async def log_error(self, error_message: str, details: Optional[dict[str, Any]] = None, **kwargs) -> JournalEntry:
         """Log an error event."""
         entry_data = {"error": error_message}
         if details:
@@ -223,7 +221,7 @@ class AJPClient:
             metadata=kwargs,
         )
 
-    async def read_entries(self, limit: int = 100, offset: int = 0) -> List[JournalEntry]:
+    async def read_entries(self, limit: int = 100, offset: int = 0) -> list[JournalEntry]:
         """Read journal entries for this agent."""
         response = await self._client.get(
             "/entries",
@@ -236,7 +234,7 @@ class AJPClient:
         response.raise_for_status()
         return [self._parse_entry(e) for e in response.json()]
 
-    async def verify_chain(self) -> Dict[str, Any]:
+    async def verify_chain(self) -> dict[str, Any]:
         """Verify the integrity of this agent's journal chain."""
         response = await self._client.post(f"/verify/{self.config.agent_id}")
         response.raise_for_status()
@@ -249,7 +247,7 @@ class AJPClient:
         data = response.json()
         return ServerHealth(**data)
 
-    def _parse_entry(self, data: Dict[str, Any]) -> JournalEntry:
+    def _parse_entry(self, data: dict[str, Any]) -> JournalEntry:
         """Parse a journal entry from server response."""
         return JournalEntry(
             entry_id=data["entry_id"],
@@ -307,9 +305,9 @@ class SyncAJPClient:
         loop = self._get_loop()
         loop.run_until_complete(self._async_client.stop())
 
-    def log(self, event_type: EventType, entry_data: Dict[str, Any],
+    def log(self, event_type: EventType, entry_data: dict[str, Any],
             priority: Optional[Priority] = None,
-            metadata: Optional[Dict[str, Any]] = None) -> JournalEntry:
+            metadata: Optional[dict[str, Any]] = None) -> JournalEntry:
         """Log a journal entry."""
         loop = self._get_loop()
         return loop.run_until_complete(
@@ -321,7 +319,7 @@ class SyncAJPClient:
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.log_thought(content, **kwargs))
 
-    def log_action(self, action_name: str, arguments: Dict[str, Any], **kwargs) -> JournalEntry:
+    def log_action(self, action_name: str, arguments: dict[str, Any], **kwargs) -> JournalEntry:
         """Log an action."""
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.log_action(action_name, arguments, **kwargs))
@@ -336,7 +334,7 @@ class SyncAJPClient:
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.log_commit(content, **kwargs))
 
-    def log_error(self, error_message: str, details: Optional[Dict[str, Any]] = None, **kwargs) -> JournalEntry:
+    def log_error(self, error_message: str, details: Optional[dict[str, Any]] = None, **kwargs) -> JournalEntry:
         """Log an error."""
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.log_error(error_message, details, **kwargs))
@@ -346,12 +344,12 @@ class SyncAJPClient:
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.log_audit(action, target, **kwargs))
 
-    def read_entries(self, limit: int = 100, offset: int = 0) -> List[JournalEntry]:
+    def read_entries(self, limit: int = 100, offset: int = 0) -> list[JournalEntry]:
         """Read journal entries."""
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.read_entries(limit, offset))
 
-    def verify_chain(self) -> Dict[str, Any]:
+    def verify_chain(self) -> dict[str, Any]:
         """Verify chain integrity."""
         loop = self._get_loop()
         return loop.run_until_complete(self._async_client.verify_chain())

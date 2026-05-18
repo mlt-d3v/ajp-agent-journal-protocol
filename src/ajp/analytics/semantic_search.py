@@ -1,10 +1,9 @@
 """Semantic search over journal entries using vector similarity."""
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Dict, List, Optional
 import hashlib
-import json
 import math
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
 
 
 @dataclass
@@ -18,10 +17,10 @@ class SearchResult:
 
 class SemanticSearchEngine:
     def __init__(self):
-        self._index: Dict[str, dict] = {}
-        self._embeddings: Dict[str, List[float]] = {}
+        self._index: dict[str, dict] = {}
+        self._embeddings: dict[str, list[float]] = {}
 
-    def _hash_embed(self, text: str) -> List[float]:
+    def _hash_embed(self, text: str) -> list[float]:
         dims = 16
         result = []
         for i in range(dims):
@@ -29,7 +28,7 @@ class SemanticSearchEngine:
             result.append(int(h[:8], 16) / 0xFFFFFFFF)
         return result
 
-    def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
+    def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
         dot = sum(x * y for x, y in zip(a, b))
         mag_a = math.sqrt(sum(x * x for x in a))
         mag_b = math.sqrt(sum(x * x for x in b))
@@ -48,7 +47,7 @@ class SemanticSearchEngine:
         self._embeddings[entry_hash] = embedding
 
     def search(self, query: str, agent_id: Optional[str] = None,
-               limit: int = 10, min_score: float = 0.0) -> List[SearchResult]:
+               limit: int = 10, min_score: float = 0.0) -> list[SearchResult]:
         query_embedding = self._hash_embed(query)
         results = []
         for entry_hash, embedding in self._embeddings.items():

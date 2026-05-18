@@ -1,10 +1,10 @@
 """Core data structures for AJP journal entries."""
+import hashlib
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
-import hashlib
-import json
+from typing import Optional
 
 
 class EventType(Enum):

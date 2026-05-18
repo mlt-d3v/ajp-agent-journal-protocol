@@ -1,13 +1,14 @@
 """FastAPI application for AJP REST API server."""
 
 import logging
-import uvicorn
 from contextlib import asynccontextmanager
+
+import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import (
-    AsyncJournalService,
+    AgentInfo,
     BackpressureInfo,
     HealthStatus,
     JournalEntryCreate,
@@ -23,7 +24,6 @@ from .api import (
     read_entries,
     shutdown_service,
     verify_chain,
-    AgentInfo,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -68,7 +68,7 @@ async def post_entry(entry: JournalEntryCreate):
     try:
         return await create_entry(entry)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/entries", response_model=list[JournalEntryResponse])
@@ -82,7 +82,7 @@ async def get_entries(
     try:
         return await read_entries(agent_id=agent_id, event_type=event_type, limit=limit, offset=offset)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/stats", response_model=ServerStats)

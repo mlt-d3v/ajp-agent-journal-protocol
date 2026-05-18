@@ -1,8 +1,8 @@
 """Background batch writer with retry and exponential backoff."""
 import asyncio
 import logging
-from typing import List, Optional
-from ..core.entry import JournalEntry
+from typing import Optional
+
 from .buffer import WriteBuffer
 from .storage import StorageBackend
 
@@ -59,7 +59,7 @@ class BatchWriter:
                 await self.storage.write_batch(batch)
                 self._write_count += len(batch)
                 return
-            except Exception as e:
+            except Exception:
                 retry_count += 1
                 self._error_count += 1
                 backoff = self._base_backoff * (2 ** retry_count)

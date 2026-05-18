@@ -1,13 +1,11 @@
 """Real PostgreSQL storage backend for AJP journal entries."""
 import asyncio
-import hashlib
 import json
 import logging
-import os
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ class PostgresConfig:
             f"?sslmode={ssl_mode}"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -202,7 +200,7 @@ class PostgresStorage:
                 self._schema_version = version
                 logger.info(f"Applied migration to version {version}: {description}")
 
-    async def write_entry(self, entry: Dict[str, Any]) -> bool:
+    async def write_entry(self, entry: dict[str, Any]) -> bool:
         """Write a single journal entry to PostgreSQL."""
         if not self._is_connected or not self._pool:
             logger.warning("PostgreSQL not connected - entry dropped")
@@ -246,7 +244,7 @@ class PostgresStorage:
                     return False
         return False
 
-    async def write_entries(self, entries: List[Dict[str, Any]]) -> int:
+    async def write_entries(self, entries: list[dict[str, Any]]) -> int:
         """Write multiple journal entries in a batch."""
         if not entries:
             return 0
@@ -305,7 +303,7 @@ class PostgresStorage:
         offset: int = 0,
         start_time: Optional[float] = None,
         end_time: Optional[float] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Read journal entries with filtering."""
         if not self._is_connected or not self._pool:
             return []
@@ -353,7 +351,7 @@ class PostgresStorage:
             logger.error(f"Read failed: {e}")
             return []
 
-    def _row_to_dict(self, row: Any) -> Dict[str, Any]:
+    def _row_to_dict(self, row: Any) -> dict[str, Any]:
         """Convert a database row to a dictionary."""
         result = dict(row)
         if "entry_data" in result and isinstance(result["entry_data"], str):
@@ -379,7 +377,7 @@ class PostgresStorage:
             logger.error(f"Delete failed: {e}")
             return 0
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get storage statistics."""
         if not self._is_connected or not self._pool:
             return {"connected": False, "schema_version": 0}

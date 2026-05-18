@@ -1,25 +1,22 @@
 """Phase 7: Real Integrations Tests - PostgreSQL, Vault, Temporal, OpenTelemetry."""
 import asyncio
 import unittest
-import time
-import json
-from unittest.mock import patch, AsyncMock, MagicMock
+
+# Test OpenTelemetry integration
+from ajp.integrations.opentelemetry import MetricType, OTelConfig, OTLPExporter, SpanKind, SpanStatus
 
 # Test PostgreSQL integration
-from ajp.integrations.postgres import PostgresStorage, PostgresConfig, PostgresLogLevel
-
-# Test Vault integration
-from ajp.integrations.vault import RealVaultClient, VaultConfig, VaultAuthConfig, VaultAuthMethod
+from ajp.integrations.postgres import PostgresConfig, PostgresLogLevel, PostgresStorage
 
 # Test Temporal integration
 from ajp.integrations.temporal import (
-    TemporalWorkflowEngine, WorkflowConfig, WorkflowType, WorkflowStatus, WorkflowExecution
+    TemporalWorkflowEngine,
+    WorkflowConfig,
+    WorkflowType,
 )
 
-# Test OpenTelemetry integration
-from ajp.integrations.opentelemetry import (
-    OTLPExporter, OTelConfig, SpanKind, SpanStatus, MetricType
-)
+# Test Vault integration
+from ajp.integrations.vault import RealVaultClient, VaultAuthConfig, VaultAuthMethod, VaultConfig
 
 
 class TestPostgresConfig(unittest.TestCase):
@@ -822,7 +819,7 @@ class TestIntegration(unittest.TestCase):
             })
 
             # Start workflow
-            workflow_id = await engine.start_workflow(
+            await engine.start_workflow(
                 WorkflowType.BATCH_FLUSH,
                 {"batch_size": 100},
             )

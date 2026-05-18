@@ -2,9 +2,8 @@
 import asyncio
 import heapq
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-from ..core.entry import JournalEntry, EventType
+
+from ..core.entry import EventType, JournalEntry
 from ..core.rate_limiter import BackpressureLevel
 
 
@@ -27,7 +26,7 @@ _EVENT_PRIORITY = {
 class WriteBuffer:
     def __init__(self, max_size: int = 500):
         self.max_size = max_size
-        self._heap: List[PriorityEntry] = []
+        self._heap: list[PriorityEntry] = []
         self._lock = asyncio.Lock()
         self._not_empty = asyncio.Event()
 
@@ -37,7 +36,7 @@ class WriteBuffer:
             heapq.heappush(self._heap, PriorityEntry(priority, entry))
             self._not_empty.set()
 
-    async def get_batch(self, max_batch: int = 50) -> List[JournalEntry]:
+    async def get_batch(self, max_batch: int = 50) -> list[JournalEntry]:
         async with self._lock:
             batch = []
             for _ in range(min(max_batch, len(self._heap))):

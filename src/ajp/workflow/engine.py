@@ -1,12 +1,11 @@
 """Temporal-like workflow engine for orchestrating agent journaling workflows."""
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
 import asyncio
 import hashlib
-import json
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Optional
 
 
 class WorkflowState(Enum):
@@ -67,13 +66,13 @@ class RetryPolicy:
     max_attempts: int = 3
     backoff_factor: float = 2.0
     max_delay: float = 60.0
-    retryable_errors: Optional[List[str]] = None
+    retryable_errors: Optional[list[str]] = None
 
 
 @dataclass
 class WorkflowDefinition:
     name: str
-    steps: List[WorkflowStep] = field(default_factory=list)
+    steps: list[WorkflowStep] = field(default_factory=list)
     retry_policy: Optional[RetryPolicy] = None
     idempotency_key: Optional[str] = None
 
@@ -83,9 +82,9 @@ class WorkflowDefinition:
 
 class WorkflowEngine:
     def __init__(self):
-        self._workflows: Dict[str, dict] = {}
-        self._checkpoints: Dict[str, List[Checkpoint]] = {}
-        self._history: List[dict] = []
+        self._workflows: dict[str, dict] = {}
+        self._checkpoints: dict[str, list[Checkpoint]] = {}
+        self._history: list[dict] = []
 
     def register_workflow(self, definition: WorkflowDefinition) -> str:
         workflow_id = hashlib.sha256(
@@ -201,8 +200,8 @@ class WorkflowEngine:
             "checkpoints": len(self._checkpoints.get(workflow_id, [])),
         }
 
-    def get_checkpoints(self, workflow_id: str) -> List[Checkpoint]:
+    def get_checkpoints(self, workflow_id: str) -> list[Checkpoint]:
         return self._checkpoints.get(workflow_id, [])
 
-    def get_history(self, workflow_id: str) -> List[dict]:
+    def get_history(self, workflow_id: str) -> list[dict]:
         return [h for h in self._history if h["workflow_id"] == workflow_id]

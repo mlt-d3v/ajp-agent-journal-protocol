@@ -1,8 +1,8 @@
 """Gap analysis for compliance frameworks."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 
 class ComplianceFramework(Enum):
@@ -66,10 +66,10 @@ class GapAnalyzer:
     }
 
     def __init__(self):
-        self._results: Dict[ComplianceFramework, List[ControlCheck]] = {}
+        self._results: dict[ComplianceFramework, list[ControlCheck]] = {}
         self._run_timestamp = datetime.utcnow()
 
-    def run_analysis(self, framework: Optional[ComplianceFramework] = None) -> List[GapFinding]:
+    def run_analysis(self, framework: Optional[ComplianceFramework] = None) -> list[GapFinding]:
         frameworks = [framework] if framework else list(ComplianceFramework)
         findings = []
         for fw in frameworks:
@@ -84,7 +84,7 @@ class GapAnalyzer:
                     ))
         return findings
 
-    def _run_framework(self, framework: ComplianceFramework) -> List[ControlCheck]:
+    def _run_framework(self, framework: ComplianceFramework) -> list[ControlCheck]:
         controls = self._CONTROLS.get(framework, [])
         return [
             ControlCheck(
@@ -140,7 +140,7 @@ class GapAnalyzer:
                 }
             return _json.dumps(report, indent=2)
         elif format == "markdown":
-            lines = [f"# AJP Compliance Report\n", f"**Generated:** {self._run_timestamp.isoformat()}\n",
+            lines = ["# AJP Compliance Report\n", f"**Generated:** {self._run_timestamp.isoformat()}\n",
                      f"**Overall Score:** {self.get_compliance_score():.0%}\n"]
             for fw, controls in self._results.items():
                 lines.append(f"\n## {fw.value.upper()} ({self.get_compliance_score(fw):.0%})\n")
@@ -157,7 +157,7 @@ class GapAnalyzer:
                 lines.append("")
             return "\n".join(lines)
 
-    def run_framework(self, framework: ComplianceFramework) -> List[GapFinding]:
+    def run_framework(self, framework: ComplianceFramework) -> list[GapFinding]:
         controls = self._run_framework(framework)
         self._results[framework] = controls
         return [

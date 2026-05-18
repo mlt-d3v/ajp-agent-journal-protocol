@@ -1,7 +1,7 @@
-from .journal import AsyncJournalService, JournalConfig
 from .buffer import WriteBuffer
+from .journal import AsyncJournalService, JournalConfig
+from .storage import MockStorage, PostgreSQLStorage, StorageBackend
 from .writer import BatchWriter
-from .storage import StorageBackend, MockStorage, PostgreSQLStorage
 
 __all__ = [
     "AsyncJournalService", "JournalConfig",

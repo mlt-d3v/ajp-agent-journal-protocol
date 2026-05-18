@@ -1,10 +1,10 @@
 """OpenTelemetry bridge for distributed tracing across agent nodes."""
+import hashlib
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-import hashlib
-import time
+from typing import Any, Optional
 
 
 class SpanKind(Enum):
@@ -32,7 +32,7 @@ class SpanAttribute:
 class SpanEvent:
     name: str
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    attributes: Dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -45,9 +45,9 @@ class Span:
     status: SpanStatus = SpanStatus.UNSET
     start_time: float = field(default_factory=time.monotonic)
     end_time: Optional[float] = None
-    attributes: List[SpanAttribute] = field(default_factory=list)
-    events: List[SpanEvent] = field(default_factory=list)
-    resource: Dict[str, str] = field(default_factory=dict)
+    attributes: list[SpanAttribute] = field(default_factory=list)
+    events: list[SpanEvent] = field(default_factory=list)
+    resource: dict[str, str] = field(default_factory=dict)
 
     @property
     def duration(self) -> Optional[float]:
@@ -90,8 +90,8 @@ class Span:
 class Tracer:
     def __init__(self, service_name: str = "ajp-agent"):
         self.service_name = service_name
-        self._spans: Dict[str, Span] = {}
-        self._traces: Dict[str, List[str]] = {}
+        self._spans: dict[str, Span] = {}
+        self._traces: dict[str, list[str]] = {}
         self._active_span: Optional[Span] = None
 
     def _generate_id(self, length: int = 16) -> str:
@@ -146,11 +146,11 @@ class Tracer:
     def get_span(self, span_id: str) -> Optional[Span]:
         return self._spans.get(span_id)
 
-    def get_trace(self, trace_id: str) -> List[Span]:
+    def get_trace(self, trace_id: str) -> list[Span]:
         span_ids = self._traces.get(trace_id, [])
         return [self._spans[sid] for sid in span_ids if sid in self._spans]
 
-    def export_spans(self, trace_id: Optional[str] = None) -> List[dict]:
+    def export_spans(self, trace_id: Optional[str] = None) -> list[dict]:
         if trace_id:
             spans = self.get_trace(trace_id)
         else:
@@ -171,9 +171,9 @@ class Tracer:
 
 class MetricsExporter:
     def __init__(self):
-        self._counters: Dict[str, float] = {}
-        self._gauges: Dict[str, float] = {}
-        self._histograms: Dict[str, List[float]] = {}
+        self._counters: dict[str, float] = {}
+        self._gauges: dict[str, float] = {}
+        self._histograms: dict[str, list[float]] = {}
 
     def increment_counter(self, name: str, value: float = 1.0, labels: Optional[dict] = None):
         key = self._label_key(name, labels)

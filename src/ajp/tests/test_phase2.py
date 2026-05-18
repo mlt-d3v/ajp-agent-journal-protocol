@@ -1,16 +1,16 @@
 """Phase 2 tests - Async Journal Service."""
-import sys
 import asyncio
+import sys
 import unittest
-from datetime import datetime
+
 sys.path.insert(0, "/Users/michaelthomas/.hermes/skills/ajp-agent-journal-protocol/src")
 
-from ajp.core.entry import JournalEntry, EventType
+from ajp.core.entry import EventType, JournalEntry
 from ajp.core.rate_limiter import BackpressureLevel
-from ajp.service.journal import AsyncJournalService, JournalConfig
 from ajp.service.buffer import WriteBuffer
-from ajp.service.writer import BatchWriter
+from ajp.service.journal import AsyncJournalService, JournalConfig
 from ajp.service.storage import MockStorage
+from ajp.service.writer import BatchWriter
 
 
 class TestWriteBuffer(unittest.IsolatedAsyncioTestCase):

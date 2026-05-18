@@ -1,17 +1,24 @@
 """Phase 5 tests - Temporal Workflow + OpenTelemetry Bridge."""
-import sys
 import asyncio
+import sys
 import unittest
-from datetime import datetime
+
 sys.path.insert(0, "/Users/michaelthomas/.hermes/skills/ajp-agent-journal-protocol/src")
 
 from ajp.workflow.engine import (
-    WorkflowEngine, WorkflowDefinition, WorkflowStep,
-    WorkflowState, Checkpoint, CheckpointType, RetryPolicy,
+    Checkpoint,
+    CheckpointType,
+    RetryPolicy,
+    WorkflowDefinition,
+    WorkflowEngine,
+    WorkflowStep,
 )
 from ajp.workflow.otel_bridge import (
-    Tracer, Span, SpanKind, SpanStatus, SpanEvent, SpanAttribute,
     MetricsExporter,
+    Span,
+    SpanKind,
+    SpanStatus,
+    Tracer,
 )
 
 
@@ -27,7 +34,8 @@ class TestWorkflowStep(unittest.TestCase):
         self.assertEqual(step.retry_delay, 0.5)
 
     def test_step_with_compensation(self):
-        comp = lambda ctx: None
+        def comp(ctx):
+            return None
         step = WorkflowStep(name="test", handler=lambda ctx: "result", compensating=comp)
         self.assertIsNotNone(step.compensating)
 
@@ -93,7 +101,7 @@ class TestWorkflowEngine(unittest.IsolatedAsyncioTestCase):
         defn = WorkflowDefinition(name="retry_test")
         defn.add_step(WorkflowStep(name="flaky", handler=flaky_handler, retry_count=5))
         wid = engine.register_workflow(defn)
-        result = await engine.execute(wid)
+        await engine.execute(wid)
         self.assertEqual(call_count[0], 3)
         self.assertEqual(engine.get_status(wid)["state"], "completed")
 
@@ -180,7 +188,7 @@ class TestWorkflowEngine(unittest.IsolatedAsyncioTestCase):
         wids = []
         for i in range(3):
             defn = WorkflowDefinition(name=f"wf_{i}")
-            defn.add_step(WorkflowStep(name="step", handler=lambda ctx: i))
+            defn.add_step(WorkflowStep(name="step", handler=lambda ctx, idx=i: idx))
             wids.append(engine.register_workflow(defn))
         for wid in wids:
             await engine.execute(wid)
@@ -243,7 +251,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(d["name"], "test")
 
     def test_child_span(self):
-        parent = Span(trace_id="t1", span_id="s1", name="parent")
+        Span(trace_id="t1", span_id="s1", name="parent")
         child = Span(trace_id="t1", span_id="s2", parent_span_id="s1", name="child")
         self.assertFalse(child.is_root)
 
@@ -310,7 +318,7 @@ class TestTracer(unittest.TestCase):
         tracer = Tracer()
         s1 = tracer.start_span("t1-op")
         tracer.end_span()
-        s2 = tracer.start_span("t2-op")
+        tracer.start_span("t2-op")
         tracer.end_span()
         trace1 = tracer.export_spans(s1.trace_id)
         self.assertEqual(len(trace1), 1)

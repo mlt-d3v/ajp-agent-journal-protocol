@@ -1,17 +1,13 @@
 """AJP REST API Server - FastAPI server wrapping the async journal service."""
 
-import asyncio
 import logging
-import os
-import uuid
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from ..core.entry import JournalEntry, EventType
+from ..core.entry import EventType, JournalEntry
 from ..service.journal import AsyncJournalService, JournalConfig
 from ..service.storage import MockStorage
 
@@ -34,9 +30,9 @@ class JournalEntryCreate(BaseModel):
     """Request body for creating a journal entry."""
     agent_id: str
     event_type: EventTypeStr
-    entry_data: Dict[str, Any] = Field(default_factory=dict)
+    entry_data: dict[str, Any] = Field(default_factory=dict)
     priority: int = Field(default=5, ge=0, le=10)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class JournalEntryResponse(BaseModel):
@@ -44,9 +40,9 @@ class JournalEntryResponse(BaseModel):
     entry_id: str
     agent_id: str
     event_type: str
-    entry_data: Dict[str, Any]
+    entry_data: dict[str, Any]
     priority: int
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: str
     entry_hash: Optional[str] = None
     signature: Optional[str] = None
@@ -162,7 +158,7 @@ async def health_check() -> HealthStatus:
         status="healthy" if backpressure.level != "CRITICAL" else "degraded",
         uptime_seconds=uptime,
         total_entries=len(entries),
-        active_agents=len(set(e.agent_id for e in entries)),
+        active_agents=len({e.agent_id for e in entries}),
         backpressure_level=backpressure.level,
         buffer_utilization=buffer_util,
     )
@@ -186,7 +182,7 @@ async def create_entry(request: JournalEntryCreate) -> JournalEntryResponse:
 
 
 async def read_entries(agent_id: Optional[str] = None, event_type: Optional[str] = None,
-                       limit: int = 100, offset: int = 0) -> List[JournalEntryResponse]:
+                       limit: int = 100, offset: int = 0) -> list[JournalEntryResponse]:
     """Read journal entries with optional filters."""
     service = await get_service()
     entries = await service.storage.read_entries(
@@ -204,7 +200,7 @@ async def get_stats() -> ServerStats:
     entries = await service.storage.read_entries(limit=10000)
     backpressure = service.backpressure_monitor.current_level
 
-    agent_ids = set(e.agent_id for e in entries)
+    agent_ids = {e.agent_id for e in entries}
     error_count = sum(1 for e in entries if e.event_type == EventType.ERROR)
 
     return ServerStats(
@@ -219,7 +215,7 @@ async def get_stats() -> ServerStats:
     )
 
 
-async def get_agents() -> List[AgentInfo]:
+async def get_agents() -> list[AgentInfo]:
     """Get list of known agents."""
     service = await get_service()
     entries = await service.storage.read_entries(limit=10000)
@@ -260,7 +256,7 @@ async def get_backpressure() -> BackpressureInfo:
     )
 
 
-async def verify_chain(agent_id: str) -> Dict[str, Any]:
+async def verify_chain(agent_id: str) -> dict[str, Any]:
     """Verify the integrity of an agent's journal chain."""
     service = await get_service()
     entries = await service.storage.read_entries(agent_id=agent_id, limit=10000)
@@ -285,7 +281,7 @@ async def verify_chain(agent_id: str) -> Dict[str, Any]:
     }
 
 
-async def flush_buffer() -> Dict[str, Any]:
+async def flush_buffer() -> dict[str, Any]:
     """Manually trigger a buffer flush."""
     service = await get_service()
     await service.writer.flush()

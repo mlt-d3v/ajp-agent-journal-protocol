@@ -1,14 +1,16 @@
 """SHA-256 hash chain with Ed25519 signatures."""
 import os
-from typing import List, Optional
-from ed25519 import SigningKey, VerifyingKey
+from typing import Optional
+
+from ed25519 import SigningKey
+
 from .entry import JournalEntry
 
 
 class JournalChain:
     def __init__(self, agent_id: str):
         self.agent_id = agent_id
-        self.entries: List[JournalEntry] = []
+        self.entries: list[JournalEntry] = []
         self.signing_key = SigningKey(os.urandom(32))
         self.verifying_key = self.signing_key.get_verifying_key()
 

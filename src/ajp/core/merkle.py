@@ -1,12 +1,13 @@
 """Merkle tree for batch verification."""
 import hashlib
-from typing import List, Optional
+from typing import Optional
+
 from .entry import JournalEntry
 
 
 class MerkleTree:
     def __init__(self):
-        self.leaves: List[str] = []
+        self.leaves: list[str] = []
         self.root: Optional[str] = None
 
     def add_entry(self, entry: JournalEntry) -> str:
@@ -34,7 +35,7 @@ class MerkleTree:
     def verify(self, entry_hash: str) -> bool:
         return entry_hash in self.leaves
 
-    def get_proof(self, entry_hash: str) -> Optional[List[str]]:
+    def get_proof(self, entry_hash: str) -> Optional[list[str]]:
         if entry_hash not in self.leaves:
             return None
         proof = []

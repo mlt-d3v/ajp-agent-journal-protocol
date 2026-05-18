@@ -1,9 +1,10 @@
 """Failure interceptor agent for detecting and remediating failure patterns."""
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
-from ..core.entry import JournalEntry, EventType
+from typing import Optional
+
+from ..core.entry import EventType, JournalEntry
 
 
 class FailurePattern(Enum):
@@ -40,10 +41,10 @@ class FailureInterceptor:
     def __init__(self, error_threshold: int = 5, stale_threshold: int = 300):
         self.error_threshold = error_threshold
         self.stale_threshold = stale_threshold
-        self._error_counts: Dict[str, int] = {}
-        self._last_activity: Dict[str, datetime] = {}
-        self._alerts: List[FailureAlert] = []
-        self._remediated: Dict[str, RemediationAction] = {}
+        self._error_counts: dict[str, int] = {}
+        self._last_activity: dict[str, datetime] = {}
+        self._alerts: list[FailureAlert] = []
+        self._remediated: dict[str, RemediationAction] = {}
 
     def check_entry(self, entry: JournalEntry) -> Optional[FailureAlert]:
         self._last_activity[entry.agent_id] = entry.timestamp
@@ -76,7 +77,7 @@ class FailureInterceptor:
             return alert
         return None
 
-    def check_stale_agents(self) -> List[FailureAlert]:
+    def check_stale_agents(self) -> list[FailureAlert]:
         alerts = []
         now = datetime.utcnow()
         for agent_id, last_active in self._last_activity.items():
@@ -92,7 +93,7 @@ class FailureInterceptor:
                 alerts.append(alert)
         return alerts
 
-    def get_alerts(self, agent_id: Optional[str] = None) -> List[FailureAlert]:
+    def get_alerts(self, agent_id: Optional[str] = None) -> list[FailureAlert]:
         if agent_id:
             return [a for a in self._alerts if a.agent_id == agent_id]
         return self._alerts.copy()

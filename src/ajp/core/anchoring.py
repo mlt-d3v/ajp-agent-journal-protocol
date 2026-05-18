@@ -1,10 +1,9 @@
 """Merkle root anchoring service for tamper-detectable provenance."""
-from dataclasses import dataclass, field
+import hashlib
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
-import hashlib
-import json
+from typing import Optional
 
 
 class AnchorBackend(Enum):
@@ -26,8 +25,8 @@ class AnchorRecord:
 class MerkleAnchoringService:
     def __init__(self, backend: AnchorBackend = AnchorBackend.LOCAL):
         self.backend = backend
-        self._anchors: List[AnchorRecord] = []
-        self._roots: Dict[str, datetime] = {}
+        self._anchors: list[AnchorRecord] = []
+        self._roots: dict[str, datetime] = {}
 
     def anchor_root(self, root_hash: str) -> Optional[AnchorRecord]:
         record = AnchorRecord(
@@ -61,7 +60,7 @@ class MerkleAnchoringService:
                 return anchor
         return None
 
-    def get_history(self, root_hash: Optional[str] = None) -> List[AnchorRecord]:
+    def get_history(self, root_hash: Optional[str] = None) -> list[AnchorRecord]:
         if root_hash:
             return [a for a in self._anchors if a.root_hash == root_hash]
         return self._anchors.copy()

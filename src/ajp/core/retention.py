@@ -1,10 +1,9 @@
 """Data retention management with tiering and GDPR compliance."""
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Callable, Dict, List, Optional
-import hashlib
 import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Optional
 
 
 class RetentionTier(Enum):
@@ -21,7 +20,7 @@ class RetentionConfig:
     warm_days: int = 90
     cold_days: int = 365
     archive_days: int = 1825
-    pii_fields: List[str] = field(default_factory=lambda: ["email", "phone", "name", "address"])
+    pii_fields: list[str] = field(default_factory=lambda: ["email", "phone", "name", "address"])
     mask_char: str = "*"
 
 
@@ -35,8 +34,8 @@ class DataRetentionManager:
 
     def __init__(self, config: Optional[RetentionConfig] = None):
         self.config = config or RetentionConfig()
-        self._entries: Dict[str, dict] = {}
-        self._audit_log: List[dict] = []
+        self._entries: dict[str, dict] = {}
+        self._audit_log: list[dict] = []
 
     def _get_tier(self, age_days: int) -> RetentionTier:
         if age_days <= self.config.hot_days:
@@ -82,7 +81,7 @@ class DataRetentionManager:
             if isinstance(value, str):
                 if key.lower() in self.config.pii_fields:
                     result[key] = self.config.mask_char * len(value)
-                for pattern_name, pattern in self._PII_PATTERNS.items():
+                for _pattern_name, pattern in self._PII_PATTERNS.items():
                     matches = re.findall(pattern, value)
                     if matches:
                         for match in matches:
@@ -102,7 +101,7 @@ class DataRetentionManager:
         })
         return True
 
-    def get_audit_log(self) -> List[dict]:
+    def get_audit_log(self) -> list[dict]:
         return self._audit_log.copy()
 
     def get_stats(self) -> dict:

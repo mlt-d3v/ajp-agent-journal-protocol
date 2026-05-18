@@ -1,19 +1,18 @@
 """Abstract storage backend with mock and PostgreSQL implementations."""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Dict, List, Optional
+
 from ..core.entry import JournalEntry
 
 
 @dataclass
 class StorageBackend(ABC):
     @abstractmethod
-    async def write_batch(self, entries: List[JournalEntry]) -> int:
+    async def write_batch(self, entries: list[JournalEntry]) -> int:
         pass
 
     @abstractmethod
-    async def read_entries(self, limit: int = 100, offset: int = 0) -> List[JournalEntry]:
+    async def read_entries(self, limit: int = 100, offset: int = 0) -> list[JournalEntry]:
         pass
 
     @abstractmethod
@@ -23,15 +22,15 @@ class StorageBackend(ABC):
 
 @dataclass
 class MockStorage(StorageBackend):
-    _entries: List[JournalEntry] = field(default_factory=list)
+    _entries: list[JournalEntry] = field(default_factory=list)
     _write_count: int = 0
 
-    async def write_batch(self, entries: List[JournalEntry]) -> int:
+    async def write_batch(self, entries: list[JournalEntry]) -> int:
         self._entries.extend(entries)
         self._write_count += len(entries)
         return len(entries)
 
-    async def read_entries(self, limit: int = 10000, offset: int = 0) -> List[JournalEntry]:
+    async def read_entries(self, limit: int = 10000, offset: int = 0) -> list[JournalEntry]:
         return self._entries[offset:offset + limit]
 
     async def health_check(self) -> bool:
@@ -50,12 +49,12 @@ class PostgreSQLStorage(StorageBackend):
     async def connect(self):
         self._connected = True
 
-    async def write_batch(self, entries: List[JournalEntry]) -> int:
+    async def write_batch(self, entries: list[JournalEntry]) -> int:
         if not self._connected:
             raise ConnectionError("Not connected to PostgreSQL")
         return len(entries)
 
-    async def read_entries(self, limit: int = 100, offset: int = 0) -> List[JournalEntry]:
+    async def read_entries(self, limit: int = 100, offset: int = 0) -> list[JournalEntry]:
         if not self._connected:
             raise ConnectionError("Not connected to PostgreSQL")
         return []

@@ -1,16 +1,17 @@
 """Phase 4 tests - Analytics and Monitoring."""
+import json
 import sys
 import unittest
-import json
 from datetime import datetime
+
 sys.path.insert(0, "/Users/michaelthomas/.hermes/skills/ajp-agent-journal-protocol/src")
 
-from ajp.core.entry import JournalEntry, EventType
-from ajp.core.rate_limiter import BackpressureLevel
-from ajp.analytics.semantic_search import SemanticSearchEngine
 from ajp.analytics.failure_interceptor import FailureInterceptor, FailurePattern, RemediationAction
-from ajp.analytics.ops_console import OpsConsole, HealthStatus, AlertSeverity, AlertRule
-from ajp.analytics.gap_analyzer import GapAnalyzer, ComplianceFramework, ControlStatus
+from ajp.analytics.gap_analyzer import ComplianceFramework, ControlStatus, GapAnalyzer
+from ajp.analytics.ops_console import AlertRule, AlertSeverity, HealthStatus, OpsConsole
+from ajp.analytics.semantic_search import SemanticSearchEngine
+from ajp.core.entry import EventType, JournalEntry
+from ajp.core.rate_limiter import BackpressureLevel
 
 
 class TestSemanticSearch(unittest.TestCase):
@@ -127,7 +128,7 @@ class TestFailureInterceptor(unittest.TestCase):
 
     def test_alert_history(self):
         fi = FailureInterceptor(error_threshold=2)
-        for i in range(2):
+        for _i in range(2):
             fi.check_entry(JournalEntry(agent_id="a", event_type=EventType.ERROR, entry_data={}))
         alerts = fi.get_alerts("a")
         self.assertGreater(len(alerts), 0)
@@ -179,7 +180,7 @@ class TestFailureInterceptor(unittest.TestCase):
 
     def test_error_count_tracking(self):
         fi = FailureInterceptor(error_threshold=5)
-        for i in range(3):
+        for _i in range(3):
             fi.check_entry(JournalEntry(agent_id="a", event_type=EventType.ERROR, entry_data={}))
         self.assertEqual(fi._error_counts["a"], 3)
 
@@ -441,7 +442,7 @@ class TestIntegration(unittest.TestCase):
         ga = GapAnalyzer()
         ga.run_analysis()
         oc = OpsConsole()
-        for i in range(10):
+        for _i in range(10):
             oc.record_entry(JournalEntry(agent_id="a", event_type=EventType.THOUGHT, entry_data={}))
         self.assertGreater(ga.get_compliance_score(), 0)
         self.assertEqual(oc.get_health_status(), HealthStatus.HEALTHY)

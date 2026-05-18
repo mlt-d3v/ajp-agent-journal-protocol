@@ -2,12 +2,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
+
+from ..core.anchoring import MerkleAnchoringService
 from ..core.entry import JournalEntry
-from ..core.chain import JournalChain
-from .vault_client import VaultClient, AuthMethod
-from .hsm import HSMBackend, SoftwareHSM, KeyType, KeyState
-from ..core.anchoring import MerkleAnchoringService, AnchorBackend
+from .hsm import HSMBackend, KeyType, SoftwareHSM
+from .vault_client import VaultClient
 
 
 class AuditEvent(Enum):
@@ -38,8 +38,8 @@ class SecurityOrchestrator:
         self.vault = vault or VaultClient()
         self.hsm = hsm or SoftwareHSM()
         self.anchoring = anchoring or MerkleAnchoringService()
-        self._audit_log: List[AuditLogEntry] = []
-        self._agent_keys: Dict[str, str] = {}
+        self._audit_log: list[AuditLogEntry] = []
+        self._agent_keys: dict[str, str] = {}
 
     def provision_agent(self, agent_id: str) -> bool:
         key_id = f"{agent_id}_signing_key"
@@ -95,7 +95,7 @@ class SecurityOrchestrator:
             return True
         return False
 
-    def get_audit_log(self, event: Optional[AuditEvent] = None) -> List[AuditLogEntry]:
+    def get_audit_log(self, event: Optional[AuditEvent] = None) -> list[AuditLogEntry]:
         if event:
             return [e for e in self._audit_log if e.event == event]
         return self._audit_log.copy()

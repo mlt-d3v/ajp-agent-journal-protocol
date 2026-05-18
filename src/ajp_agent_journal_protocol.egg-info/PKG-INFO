@@ -1,0 +1,117 @@
+Metadata-Version: 2.4
+Name: ajp-agent-journal-protocol
+Version: 0.7.0
+Summary: Agent Journal Protocol - Tamper-evident, compliance-ready journaling for AI agents
+Author: AJP Team
+License-Expression: MIT
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Security
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: cryptography>=41.0.0
+Requires-Dist: ed25519>=1.5
+Requires-Dist: pydantic>=2.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21; extra == "dev"
+Requires-Dist: ruff>=0.4.0; extra == "dev"
+Requires-Dist: mypy>=1.10; extra == "dev"
+Requires-Dist: bandit>=1.7; extra == "dev"
+Requires-Dist: safety>=2.0; extra == "dev"
+Requires-Dist: coverage>=7.0; extra == "dev"
+Provides-Extra: server
+Requires-Dist: fastapi>=0.100.0; extra == "server"
+Requires-Dist: uvicorn>=0.23.0; extra == "server"
+Requires-Dist: httpx>=0.24.0; extra == "server"
+Provides-Extra: sdk
+Requires-Dist: httpx>=0.24.0; extra == "sdk"
+Requires-Dist: httpx-sse>=0.4.0; extra == "sdk"
+Provides-Extra: postgres
+Requires-Dist: asyncpg>=0.28.0; extra == "postgres"
+Requires-Dist: alembic>=1.12.0; extra == "postgres"
+Requires-Dist: sqlalchemy>=2.0.0; extra == "postgres"
+Provides-Extra: vault
+Requires-Dist: hvac>=2.0.0; extra == "vault"
+Provides-Extra: temporal
+Requires-Dist: temporalio>=1.5.0; extra == "temporal"
+Provides-Extra: opentelemetry
+Requires-Dist: opentelemetry-api>=1.20.0; extra == "opentelemetry"
+Requires-Dist: opentelemetry-sdk>=1.20.0; extra == "opentelemetry"
+Requires-Dist: opentelemetry-exporter-otlp>=1.20.0; extra == "opentelemetry"
+Provides-Extra: all
+Requires-Dist: ajp-agent-journal-protocol[dev,opentelemetry,postgres,sdk,server,temporal,vault]; extra == "all"
+
+# Agent Journal Protocol (AJP)
+
+Tamper-evident, compliance-ready journaling for autonomous AI agents.
+
+## Quick Start
+
+```bash
+# Install
+pip install ajp-agent-journal-protocol[all]
+
+# Start the server
+python -m ajp.server.app --host 0.0.0.0 --port 8000
+
+# Use the SDK
+from ajp.sdk import AJPClient, AgentConfig
+
+config = AgentConfig(agent_id="my-agent", server_url="http://localhost:8000")
+client = AJPClient(config)
+await client.start()
+await client.log_thought("Processing request...")
+await client.log_action("search", {"query": "hello"})
+await client.log_error("Connection failed")
+```
+
+## Architecture
+
+Six phases of agent journaling:
+
+| Phase | Module | Tests | Description |
+|-------|--------|-------|-------------|
+| 1 | Core | 27 | Hash chaining, Ed25519 signatures, Merkle trees, injection protection, rate limiting, data retention |
+| 2 | Service | 35 | Async journal service, priority buffer, batch writer, backpressure, storage backends |
+| 3 | Security | 49 | Vault client, HSM, Merkle anchoring (Local/GitHub/IPFS/Blockchain), security orchestrator |
+| 4 | Analytics | 74 | Semantic search, failure interceptor (7 patterns), ops console, compliance gap analyzer |
+| 5 | Workflow | 54 | Temporal-like workflow engine, OpenTelemetry tracing, metrics exporter |
+| 6 | Server+SDK | 24 | FastAPI REST server, async/sync Python SDK clients |
+
+Total: 223 passing tests
+
+## API Endpoints
+
+- `GET /health` - Server health status
+- `POST /entries` - Create journal entry
+- `GET /entries` - Read entries (filter by agent_id, event_type)
+- `GET /stats` - Server statistics
+- `GET /agents` - List known agents
+- `GET /backpressure` - Backpressure status
+- `POST /flush` - Manual buffer flush
+- `POST /verify/{agent_id}` - Verify chain integrity
+
+## SDK Clients
+
+Async client for async agents:
+```python
+client = AJPClient(AgentConfig(agent_id="agent-1"))
+await client.log_thought("Thinking...")
+```
+
+Sync client for blocking agents:
+```python
+client = SyncAJPClient(AgentConfig(agent_id="agent-1"))
+client.log_thought("Thinking...")
+```
+
+## Compliance
+
+Built-in gap analysis for SOC 2, GDPR, and OWASP LLM Top 10.

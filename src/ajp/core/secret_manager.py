@@ -1,11 +1,10 @@
 """Secret management with Vault backend and RBAC."""
+import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-import hashlib
-import json
+from typing import Optional
 
 
 class SecretLevel(Enum):
@@ -30,13 +29,13 @@ class VaultBackend(ABC):
         pass
 
     @abstractmethod
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         pass
 
 
 @dataclass
 class MockVaultBackend(VaultBackend):
-    _store: Dict[str, dict] = field(default_factory=dict)
+    _store: dict[str, dict] = field(default_factory=dict)
 
     def store(self, path: str, data: dict, level: SecretLevel = SecretLevel.MEDIUM) -> bool:
         self._store[path] = {
@@ -55,14 +54,14 @@ class MockVaultBackend(VaultBackend):
     def delete(self, path: str) -> bool:
         return self._store.pop(path, None) is not None
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._store.keys())
 
 
 @dataclass
 class RBACPolicy:
     agent_id: str
-    allowed_paths: List[str] = field(default_factory=list)
+    allowed_paths: list[str] = field(default_factory=list)
     max_level: SecretLevel = SecretLevel.MEDIUM
     token: Optional[str] = None
     expires_at: Optional[datetime] = None
@@ -71,11 +70,11 @@ class RBACPolicy:
 class SecretManager:
     def __init__(self, backend: Optional[VaultBackend] = None):
         self.backend = backend or MockVaultBackend()
-        self.policies: Dict[str, RBACPolicy] = {}
-        self.tokens: Dict[str, str] = {}
+        self.policies: dict[str, RBACPolicy] = {}
+        self.tokens: dict[str, str] = {}
 
     def register_agent(self, agent_id: str, max_level: SecretLevel = SecretLevel.MEDIUM,
-                       allowed_paths: Optional[List[str]] = None) -> str:
+                       allowed_paths: Optional[list[str]] = None) -> str:
         policy = RBACPolicy(
             agent_id=agent_id,
             max_level=max_level,

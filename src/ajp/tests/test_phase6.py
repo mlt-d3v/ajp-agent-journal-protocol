@@ -1,41 +1,26 @@
 """Phase 6 Tests: REST API Server + Agent SDK Client."""
 
-import asyncio
 import sys
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import httpx
 
 # Add src to path
 sys.path.insert(0, str(__file__.rsplit("/", 3)[0]))
 
-from ajp.core.entry import JournalEntry, EventType
+from ajp.core.entry import EventType, JournalEntry
 from ajp.sdk.client import (
-    AJPClient,
-    SyncAJPClient,
     AgentConfig,
+    AJPClient,
     Priority,
-    JournalEntry as SDKJournalEntry,
     ServerHealth,
+    SyncAJPClient,
 )
 from ajp.server.api import (
+    AgentInfo,
+    BackpressureInfo,
+    HealthStatus,
     JournalEntryCreate,
     JournalEntryResponse,
-    HealthStatus,
     ServerStats,
-    BackpressureInfo,
-    AgentInfo,
-    create_entry,
-    read_entries,
-    health_check,
-    get_stats,
-    get_agents,
-    get_backpressure,
-    verify_chain,
-    flush_buffer,
-    get_service,
-    shutdown_service,
 )
 
 
@@ -52,7 +37,7 @@ class TestJournalEntryCreate(unittest.TestCase):
         self.assertEqual(req.event_type.value, "thought")
 
     def test_priority_validation(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             JournalEntryCreate(
                 agent_id="test",
                 event_type="thought",
@@ -187,7 +172,7 @@ class TestAJPClient(unittest.TestCase):
 
     def test_log_thought_payload(self):
         config = AgentConfig(agent_id="test-agent")
-        client = AJPClient(config)
+        AJPClient(config)
         # Verify the payload structure
         payload = {
             "agent_id": "test-agent",
@@ -201,7 +186,7 @@ class TestAJPClient(unittest.TestCase):
 
     def test_log_error_high_priority(self):
         config = AgentConfig(agent_id="test-agent")
-        client = AJPClient(config)
+        AJPClient(config)
         payload = {
             "agent_id": "test-agent",
             "event_type": "error",
@@ -298,7 +283,7 @@ class TestIntegration(unittest.TestCase):
     def test_client_server_payload_compatibility(self):
         """Verify client payload matches server expectations."""
         config = AgentConfig(agent_id="test")
-        client = AJPClient(config)
+        AJPClient(config)
 
         # Build payload
         payload = {

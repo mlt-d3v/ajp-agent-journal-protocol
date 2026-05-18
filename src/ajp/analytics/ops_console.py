@@ -1,9 +1,10 @@
 """Ops console for real-time monitoring and alerting."""
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Optional
-from ..core.entry import JournalEntry, EventType
+from typing import Callable, Optional
+
+from ..core.entry import EventType, JournalEntry
 from ..core.rate_limiter import BackpressureLevel
 
 
@@ -33,14 +34,14 @@ class MetricPoint:
     name: str
     value: float
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
 
 class OpsConsole:
     def __init__(self):
-        self._metrics: Dict[str, List[MetricPoint]] = {}
-        self._alert_rules: List[AlertRule] = []
-        self._alerts: List[dict] = []
+        self._metrics: dict[str, list[MetricPoint]] = {}
+        self._alert_rules: list[AlertRule] = []
+        self._alerts: list[dict] = []
         self._error_count = 0
         self._total_count = 0
         self._backpressure_level = BackpressureLevel.OK
@@ -77,7 +78,7 @@ class OpsConsole:
     def add_alert_rule(self, rule: AlertRule):
         self._alert_rules.append(rule)
 
-    def check_alerts(self) -> List[dict]:
+    def check_alerts(self) -> list[dict]:
         new_alerts = []
         error_rate = self._error_count / max(self._total_count, 1)
         if error_rate > 0.2:
@@ -114,7 +115,7 @@ class OpsConsole:
                     pass
         return new_alerts
 
-    def get_metrics(self, name: Optional[str] = None, limit: int = 100) -> Dict[str, List[MetricPoint]]:
+    def get_metrics(self, name: Optional[str] = None, limit: int = 100) -> dict[str, list[MetricPoint]]:
         if name:
             return {name: self._metrics.get(name, [])[-limit:]}
         return {k: v[-limit:] for k, v in self._metrics.items()}

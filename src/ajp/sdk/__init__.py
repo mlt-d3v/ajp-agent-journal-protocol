@@ -1,13 +1,13 @@
 """AJP Agent SDK - Python client library for agents."""
 
 from .client import (
-    AJPClient,
-    SyncAJPClient,
     AgentConfig,
+    AJPClient,
     EventType,
-    Priority,
     JournalEntry,
+    Priority,
     ServerHealth,
+    SyncAJPClient,
 )
 
 __all__ = [

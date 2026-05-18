@@ -1,0 +1,2 @@
+[console_scripts]
+ajp-server = ajp.server.app:create_app
