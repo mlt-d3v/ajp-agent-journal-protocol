@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  ajp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - AJP_POSTGRES_URL=postgresql+asyncpg://ajp:ajp@postgres:5432/ajp
+      - AJP_VAULT_URL=http://vault:8200
+      - AJP_OTEL_ENDPOINT=http://otel:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ajp
+      POSTGRES_PASSWORD: ajp
+      POSTGRES_DB: ajp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ajp"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  vault:
+    image: hashicorp/vault:latest
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-token
+      VAULT_ADDR: http://vault:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+    volumes:
+      - ./otel-config.yaml:/etc/otel/config.yaml
+    command: --config /etc/otel/config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - otel-collector
+
+volumes:
+  pgdata:
