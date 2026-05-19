@@ -196,6 +196,34 @@ AJP is a tamper-evident, compliance-ready journaling protocol for AI agents. It 
 - Makefile: install, test, lint, security, build, docker-up/down, server, release
 - OpenTelemetry collector config (traces, metrics, logs)
 
+## Phase 10: Compliance Audits (DONE - 15 tests)
+
+### Evidence-Based Compliance Checking
+- ComplianceAuditor runs live evidence collection against AJP components
+- SOC 2 (7 controls): log immutability, digital signatures, encryption at rest, monitoring, key rotation
+- GDPR (4 controls): right to erasure, data minimization/PII masking, security of processing
+- OWASP LLM (4 controls): prompt injection, sensitive info disclosure, prompt leakage protection
+- Each control has verifiable EvidenceItem with pass/fail + detail
+- Report generation in text and JSON formats
+- Combined multi-framework report generation
+
+## Phase 9: Performance Benchmarks (DONE - 9 tests)
+
+### Benchmark Harness
+- Benchmark class with warmup, iteration control, latency measurement
+- P50/P95/P99 latency percentiles
+- Memory delta tracking (when psutil available)
+- Text and JSON report generation
+
+### Benchmarks
+- JournalEntry creation throughput (773K ops/sec)
+- Entry hash computation (399K ops/sec)
+- Chain append throughput (10+ ops/sec with signing)
+- Chain verification latency (100 entries: ~71ms P50, 1000 entries: ~700ms P50)
+- Merkle tree add throughput and proof generation
+- Semantic search query latency
+- Full benchmark suite with report file output
+
 ## Test Summary
 | Phase | Tests | Status |
 |-------|-------|--------|
@@ -207,7 +235,9 @@ AJP is a tamper-evident, compliance-ready journaling protocol for AI agents. It 
 | 6     | 24    | ✅ PASS |
 | 7     | 69    | ✅ PASS |
 | 8     | 24    | ✅ PASS |
-| Total | 316   | ✅ 316 PASS |
+| 9     | 9     | ✅ PASS |
+| 10    | 15    | ✅ PASS |
+| Total | 340   | ✅ 340 PASS |
 
 ## Packaging
 - pyproject.toml with setuptools

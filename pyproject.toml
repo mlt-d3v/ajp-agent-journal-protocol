@@ -68,7 +68,7 @@ all = [
 ]
 
 [project.scripts]
-ajp-server = "ajp.server.app:create_app"
+ajp-server = "ajp.server.app:main"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
@@ -96,3 +96,7 @@ disable_error_code = ["arg-type", "call-arg", "attr-defined", "operator", "no-an
 [tool.pytest.ini_options]
 testpaths = ["src/ajp/tests"]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests that need external services",
+]

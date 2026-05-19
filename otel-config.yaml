@@ -12,21 +12,20 @@ processors:
     send_batch_size: 100
 
 exporters:
-  logging:
-    loglevel: info
-  console:
+  debug:
+    verbosity: basic
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, console]
+      exporters: [debug]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, console]
+      exporters: [debug]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, console]
+      exporters: [debug]

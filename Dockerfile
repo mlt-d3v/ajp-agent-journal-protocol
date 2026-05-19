@@ -12,7 +12,9 @@ WORKDIR /app
 
 # Install runtime deps
 COPY --from=builder /build/dist/*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/*.whl[server]
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    WHEEL=$(ls /tmp/*.whl) && pip install --no-cache-dir "${WHEEL}[server]" && \
+    apt-get purge -y gcc libc6-dev && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Non-root user
 RUN useradd --create-home ajp
